@@ -1,4 +1,8 @@
 (function () {
+  var header = document.getElementById('siteHeader');
+  function onScroll() { if (header) header.classList.toggle('scrolled', window.scrollY > 10); }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
   var btn = document.getElementById('menuBtn');
   var nav = document.getElementById('nav');
   if (btn && nav) {
@@ -14,11 +18,23 @@
   var year = document.getElementById('year');
   if (year) year.textContent = new Date().getFullYear();
 
+  var reveals = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { threshold: 0.12 });
+    reveals.forEach(function (el) { io.observe(el); });
+  } else { reveals.forEach(function (el) { el.classList.add('in'); }); }
+
   var chips = document.querySelectorAll('.chip');
   var products = document.querySelectorAll('.product');
   function applyFilter(cat) {
     chips.forEach(function (c) { c.classList.toggle('active', c.dataset.filter === cat); });
-    products.forEach(function (p) { p.classList.toggle('is-hidden', cat !== 'all' && p.dataset.cat !== cat); });
+    products.forEach(function (p) {
+      var hide = cat !== 'all' && p.dataset.cat !== cat;
+      p.classList.toggle('is-hidden', hide);
+      if (!hide) p.classList.add('in');
+    });
   }
   chips.forEach(function (c) { c.addEventListener('click', function () { applyFilter(c.dataset.filter); }); });
   document.querySelectorAll('[data-go]').forEach(function (a) {
@@ -51,7 +67,7 @@
     co.addEventListener('submit', function (e) {
       e.preventDefault();
       var v = function (id) { return (document.getElementById(id).value || '').trim(); };
-      if (!v('co-name') || !v('co-items') || !v('co-loc')) { co.reportValidity && co.reportValidity(); alert('Please fill in your name, what you want to order and your delivery location.'); return; }
+      if (!v('co-name') || !v('co-items') || !v('co-loc')) { alert('Please fill in your name, what you want to order and your delivery location.'); return; }
       var pay = co.querySelector('input[name="pay"]:checked').value;
       var lines = [
         "Hello Lord's Art & Crafts, I would like to place an order.",
